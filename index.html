@@ -1,7 +1,301 @@
-fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=Привет')
-    .then(r => {
-        console.log('STATUS:', r.status);
-        return r.text();
-    })
-    .then(x => console.log('RESPONSE:', x))
-    .catch(e => console.error('ERROR:', e));
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Переводчик</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #e0f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .box {
+            background: white;
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            color: #00796b;
+            margin: 0 0 5px 0;
+        }
+
+        .sub {
+            color: #80cbc4;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border-radius: 15px;
+            border: 2px solid #b2dfdb;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #00897b;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        select {
+            flex: 1;
+            padding: 10px;
+            border-radius: 15px;
+            border: 2px solid #b2dfdb;
+            font-size: 15px;
+            background: white;
+        }
+
+        button {
+            background: #00897b;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            background: #00695c;
+        }
+
+        button:disabled {
+            background: #80cbc4;
+            cursor: wait;
+        }
+
+        #result {
+            margin-top: 20px;
+            background: #f1f8f7;
+            padding: 15px;
+            border-radius: 15px;
+            min-height: 60px;
+            border: 2px solid #b2dfdb;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .counter {
+            text-align: right;
+            color: #80a9a5;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .hint {
+            color: #80a9a5;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 500px) {
+            .box {
+                padding: 20px;
+                border-radius: 20px;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            select,
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+
+    <h1>🇷🇺 Переводчик</h1>
+    <div class="sub">155 языков народов России</div>
+
+    <textarea
+        id="inputText"
+        maxlength="5000"
+        placeholder="Введите текст..."
+    >Привет, как дела?</textarea>
+
+    <div class="counter">
+        <span id="charCount">0</span> / 5000
+    </div>
+
+    <div class="controls">
+
+        <select id="langSelect">
+            <option value="ru">На русский</option>
+            <option value="tt">На татарский</option>
+            <option value="ce">На чеченский</option>
+            <option value="ba">На башкирский</option>
+            <option value="cv">На чувашский</option>
+            <option value="sah">На якутский</option>
+            <option value="os">На осетинский</option>
+            <option value="en">На английский</option>
+        </select>
+
+        <button id="translateBtn">
+            Перевести
+        </button>
+
+    </div>
+
+    <div id="result">Здесь будет перевод...</div>
+
+    <div class="hint">
+        Нажмите Ctrl + Enter для перевода
+    </div>
+
+</div>
+
+<script>
+    const inputText = document.getElementById('inputText');
+    const langSelect = document.getElementById('langSelect');
+    const translateBtn = document.getElementById('translateBtn');
+    const result = document.getElementById('result');
+    const charCount = document.getElementById('charCount');
+
+    const MAX_LENGTH = 5000;
+
+
+    // Update character counter
+    function updateCounter() {
+        charCount.textContent = inputText.value.length;
+    }
+
+    inputText.addEventListener('input', updateCounter);
+    updateCounter();
+
+
+    async function translateText() {
+
+        const text = inputText.value.trim();
+        const lang = langSelect.value;
+
+        // Empty input
+        if (!text) {
+            result.textContent = 'Введите текст';
+            return;
+        }
+
+        // Length check
+        if (text.length > MAX_LENGTH) {
+            result.textContent = 'Слишком длинный текст';
+            return;
+        }
+
+        // Prevent repeated clicks
+        translateBtn.disabled = true;
+        translateBtn.textContent = 'Перевожу...';
+        result.textContent = '⏳ Перевожу...';
+
+        try {
+
+            const url =
+                'https://translate.googleapis.com/translate_a/single' +
+                '?client=gtx' +
+                '&sl=auto' +
+                '&tl=' + encodeURIComponent(lang) +
+                '&dt=t' +
+                '&q=' + encodeURIComponent(text);
+
+            console.log('Translation request:', url);
+
+            const response = await fetch(url);
+
+            console.log('HTTP status:', response.status);
+
+            if (!response.ok) {
+                throw new Error(
+                    `HTTP ${response.status}: ${response.statusText}`
+                );
+            }
+
+            const data = await response.json();
+
+            console.log('Translation response:', data);
+
+            // Check Google response structure
+            if (!Array.isArray(data) || !Array.isArray(data[0])) {
+                throw new Error('Unexpected response format');
+            }
+
+            let translation = '';
+
+            for (const part of data[0]) {
+                if (Array.isArray(part) && part[0]) {
+                    translation += part[0];
+                }
+            }
+
+            if (!translation) {
+                throw new Error('Empty translation');
+            }
+
+            result.textContent = translation;
+
+        } catch (error) {
+
+            console.error('Translation error:', error);
+
+            result.textContent =
+                '❌ Не удалось выполнить перевод.\n\n' +
+                'Попробуйте ещё раз.';
+
+        } finally {
+
+            translateBtn.disabled = false;
+            translateBtn.textContent = 'Перевести';
+        }
+    }
+
+
+    // Button
+    translateBtn.addEventListener('click', translateText);
+
+
+    // Ctrl + Enter
+    inputText.addEventListener('keydown', function(event) {
+
+        if (event.ctrlKey && event.key === 'Enter') {
+            event.preventDefault();
+            translateText();
+        }
+
+    });
+</script>
+
+</body>
+</html>
