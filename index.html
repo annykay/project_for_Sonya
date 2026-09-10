@@ -1,53 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Переводчик</title>
-    <style>
-        body { font-family: Arial; background: #e0f7fa; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: white; padding: 30px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 400px; }
-        h1 { color: #00796b; margin: 0 0 5px 0; }
-        .sub { color: #80cbc4; margin-bottom: 20px; }
-        textarea { width: 100%; height: 100px; padding: 10px; border-radius: 15px; border: 2px solid #b2dfdb; font-size: 16px; }
-        select { width: 60%; padding: 10px; border-radius: 15px; border: 2px solid #b2dfdb; margin: 15px 0; }
-        button { background: #00897b; color: white; border: none; padding: 12px 30px; border-radius: 15px; font-size: 16px; cursor: pointer; }
-        #result { margin-top: 20px; background: #f1f8f7; padding: 15px; border-radius: 15px; min-height: 50px; border: 2px solid #b2dfdb; }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <h1>🇷🇺 Переводчик</h1>
-        <div class="sub">155 языков народов России</div>
-        <textarea id="inputText">Привет, как дела?</textarea>
-        <select id="langSelect">
-            <option value="ru">На русский</option>
-            <option value="tt">На татарский</option>
-            <option value="ce">На чеченский</option>
-            <option value="ba">На башкирский</option>
-            <option value="cv">На чувашский</option>
-            <option value="sah">На якутский</option>
-            <option value="os">На осетинский</option>
-            <option value="en">На английский</option>
-        </select>
-        <button id="translateBtn">Перевести</button>
-        <div id="result">Здесь будет перевод...</div>
-    </div>
-    <script>
-        document.getElementById('translateBtn').addEventListener('click', function() {
-            let text = document.getElementById('inputText').value;
-            let lang = document.getElementById('langSelect').value;
-            let res = document.getElementById('result');
-            if (!text.trim()) { res.textContent = 'Введите текст'; return; }
-            res.textContent = '⏳ Перевожу...';
-            fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' + lang + '&dt=t&q=' + encodeURIComponent(text))
-                .then(r => r.json())
-                .then(d => {
-                    let t = '';
-                    for (let i = 0; i < d[0].length; i++) if (d[0][i][0]) t += d[0][i][0];
-                    res.textContent = t || 'Ошибка';
-                })
-                .catch(() => res.textContent = '❌ Ошибка интернета');
-        });
-    </script>
-</body>
-</html>
+fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=Привет')
+    .then(r => {
+        console.log('STATUS:', r.status);
+        return r.text();
+    })
+    .then(x => console.log('RESPONSE:', x))
+    .catch(e => console.error('ERROR:', e));
